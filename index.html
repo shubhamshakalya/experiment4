@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AJAX Search Suggestion</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    #suggestions {
+      border: 1px solid #ccc;
+      max-width: 300px;
+      background: #fff;
+      position: absolute;
+      z-index: 1000;
+    }
+    #suggestions li {
+      padding: 8px;
+      cursor: pointer;
+    }
+    #suggestions li:hover {
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Search Box with Suggestions</h2>
+  <input type="text" id="searchBox" placeholder="Type to search..." autocomplete="off">
+  <ul id="suggestions"></ul>
+
+  <script>
+    $(document).ready(function() {
+      $("#searchBox").on("keyup", function() {
+        let query = $(this).val();
+
+        if (query.length > 1) {
+          $.ajax({
+            url: "search.php",       // backend script
+            method: "GET",
+            data: { q: query },
+            success: function(data) {
+              let suggestions = JSON.parse(data);
+              let suggestionList = "";
+
+              suggestions.forEach(function(item) {
+                suggestionList += "<li>" + item + "</li>";
+              });
+
+              $("#suggestions").html(suggestionList).show();
+            }
+          });
+        } else {
+          $("#suggestions").hide();
+        }
+      });
+
+      // Handle click on suggestion
+      $(document).on("click", "#suggestions li", function() {
+        $("#searchBox").val($(this).text());
+        $("#suggestions").hide();
+      });
+    });
+  </script>
+</body>
+</html>
