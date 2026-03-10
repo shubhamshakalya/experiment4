@@ -10,6 +10,10 @@
       background: #fff;
       position: absolute;
       z-index: 1000;
+      display: none;
+      list-style: none;
+      margin: 0;
+      padding: 0;
     }
     #suggestions li {
       padding: 8px;
@@ -23,38 +27,53 @@
 <body>
   <h2>Search Box with Suggestions</h2>
   <input type="text" id="searchBox" placeholder="Type to search..." autocomplete="off">
-  <ul id="suggestions"></ul>
+  <ul id="suggestions" role="listbox"></ul>
 
   <script>
     $(document).ready(function() {
+      let timer;
+
       $("#searchBox").on("keyup", function() {
+        clearTimeout(timer);
         let query = $(this).val();
 
-        if (query.length > 1) {
-          $.ajax({
-            url: "search.php",       // backend script
-            method: "GET",
-            data: { q: query },
-            success: function(data) {
-              let suggestions = JSON.parse(data);
-              let suggestionList = "";
+        timer = setTimeout(function() {
+          if (query.length > 1) {
+            $.ajax({
+              url: "search.php",       // backend script
+              method: "GET",
+              data: { q: query },
+              dataType: "json",        // auto-parse JSON
+              success: function(suggestions) {
+                let suggestionList = "";
+                suggestions.forEach(function(item) {
+                  suggestionList += "<li role='option'>" + item + "</li>";
+                });
 
-              suggestions.forEach(function(item) {
-                suggestionList += "<li>" + item + "</li>";
-              });
-
-              $("#suggestions").html(suggestionList).show();
-            }
-          });
-        } else {
-          $("#suggestions").hide();
-        }
+                if (suggestions.length > 0) {
+                  $("#suggestions").html(suggestionList).show();
+                } else {
+                  $("#suggestions").hide();
+                }
+              }
+            });
+          } else {
+            $("#suggestions").hide();
+          }
+        }, 300); // debounce delay
       });
 
       // Handle click on suggestion
       $(document).on("click", "#suggestions li", function() {
         $("#searchBox").val($(this).text());
         $("#suggestions").hide();
+      });
+
+      // Hide suggestions when clicking outside
+      $(document).on("click", function(e) {
+        if (!$(e.target).closest("#searchBox, #suggestions").length) {
+          $("#suggestions").hide();
+        }
       });
     });
   </script>
